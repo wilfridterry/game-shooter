@@ -40,6 +40,20 @@ class GameElement:
     def can_move_down(self) -> bool:
         return self.y <= self.screen_height - self.height - self.step
 
+    def is_above_up(self) -> bool:
+        return self.y + self.height < 0
+
+    def is_under_down(self) -> bool:
+        return self.y + self.height > self.screen_height
+    
+    def move_up(self) -> None:
+        self.is_moving_left = True
+        self.move_by_y(self.y - self.step)
+
+    def move_down(self) -> None:
+        self.is_moving_left = True
+        self.move_by_y(self.y + self.step)
+
     def move_left(self) -> None:
         self.is_moving_left = True
         self.move_by_x(self.x - self.step)
@@ -69,3 +83,18 @@ class GameElement:
 
     def hide(self) -> None:
         self.is_visible = False    
+
+class Game:
+    FONT_SIZE: int = 30
+
+    def __init__(self, width: int, height: int, color: tuple=None) -> None:
+        self.display = pygame.display
+        self.screen = self.display.set_mode((width, height))
+        self.font = pygame.font.Font(None, Game.FONT_SIZE)
+        self.color = color
+
+    def fill(self) -> None:
+        self.screen.fill(self.color)
+
+    def blit_element(self, elem: GameElement) -> None:
+        self.screen.blit(elem.image, (elem.x, elem.y))

@@ -1,31 +1,31 @@
 import sys
+from random import randint
 import pygame
-from utils.models import GameElement
+from utils.models import Game, GameElement
 
 
 pygame.init()
 
-screen_width, screen_height = 900, 700
-screen_dimentions = (screen_width, screen_height)
-screen_fill_color = (32, 52, 81)
-screen = pygame.display.set_mode((screen_width, screen_height))
+game = Game(width=900, height=700, color=(32, 52, 81))
+game.display.set_caption("Awesome Shooter Game")
+dimentions = (game.screen.get_width(), game.screen.get_height())
 
-pygame.display.set_caption("Awesome Shooter Game")
-
-fighter = GameElement('Fighter', './images/fighter.png', screen_dimentions)
-fighter.move_by_x(screen_width / 2 - fighter.width / 2)
-fighter.move_by_y(screen_height - fighter.height)
+fighter = GameElement('Fighter', './images/fighter.png', dimentions)
+fighter.move_by_x(game.screen.get_width() / 2 - fighter.width / 2)
+fighter.move_by_y(game.screen.get_height() - fighter.height)
 fighter.set_step(0.5)
 
-rocket = GameElement('Rocket', './images/rocket.png', screen_dimentions)
-rocket.move_by_x(fighter.x + fighter.width / 2 - rocket.width / 2)
-rocket.move_by_y(fighter.y - rocket.height)
-rocket.hide()
+ball = GameElement('Ball', './images/ball.png', dimentions)
+ball.set_step(0.3)
+ball.hide()
 
-# alien = GameElement('Alien', './images/alien.png', screen_dimentions)
+alien = GameElement('Alien', './images/alien.png', dimentions)
+alien.set_step(0.1)
+alien.set_position(randint(0, game.screen.get_width() - alien.width), 0)
 
+game_is_running = True
 
-while True:
+while game_is_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
@@ -35,7 +35,9 @@ while True:
             if event.key == pygame.K_RIGHT and fighter.can_move_right():
                 fighter.move_right()
             if event.key == pygame.K_SPACE:
-                rocket.show()
+                ball.show()
+                ball.move_by_x(fighter.x + fighter.width / 2 - ball.width / 2)
+                ball.move_by_y(fighter.y - ball.height)
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
                 fighter.stop_moving_left()
@@ -45,9 +47,31 @@ while True:
     fighter.keep_moving_left()
     fighter.keep_moving_right()
 
-    screen.fill(screen_fill_color)
-    screen.blit(fighter.image, (fighter.x, fighter.y))
-    if rocket.is_visible:
-        screen.blit(rocket.image, (rocket.x, rocket.y))
+    alien.move_down()
 
-    pygame.display.update()
+    if ball.is_visible and ball.is_above_up():
+        ball.hide()
+
+    if ball.is_visible:
+        ball.move_up()
+
+    game.fill()
+    game.blit_element(fighter)
+    game.blit_element(alien)
+
+    if ball.is_visible:
+        game.blit_element(ball)
+
+    game.display.update()
+
+    if alien.is_under_down():
+        game_is_running = False
+
+game_over_text = game.font.render("Game Over", True, "white")
+game_over_rectangle = game_over_text.get_rect()
+game_over_rectangle.center = (game.screen.get_width() / 2, game.screen.get_height() / 2)
+game.screen.blit(game_over_text, game_over_rectangle)
+pygame.display.update()
+pygame.time.wait(5000)
+
+pygame.quit()
